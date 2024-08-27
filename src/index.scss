@@ -1,0 +1,81 @@
+$green: #1abc9c;
+$yellow: #f1c40f;
+$red: #c0392b;
+$blue: #3498db;
+$grey: #f2f2f2;
+$gauge-level: 50%;
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+body {
+  margin: 0;
+}
+
+/* Game section */
+
+/* Win */
+.win {
+  font-size: 3rem;
+  color: white;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Gauges */
+
+.force-gauge {
+  border: 2px solid white;
+  border-radius: 10px;
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 30px;
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+
+  .force-bar {
+    background: rgb(0, 255, 21);
+    background: linear-gradient(to top, $red 0%, $yellow 50%, $green 100%);
+    height: 100%;
+    width: 100%;
+    transition: height 0.3s ease-in-out;
+    clip-path: polygon(
+      0 calc(100% - $gauge-level),
+      100% calc(100% - $gauge-level),
+      100% 100%,
+      0 100%
+    );
+    animation: gauge-level 3s infinite linear;
+  }
+}
+
+@keyframes gauge-level {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  50% {
+    clip-path: polygon(
+      0 100%,
+      100% 100%,
+      100% 100%,
+      0 100%
+    );
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
