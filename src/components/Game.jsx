@@ -1,10 +1,9 @@
-import { useGLTF, Box, Stars, Sky } from "@react-three/drei";
-import { CuboidCollider, Physics, RigidBody } from "@react-three/rapier";
-import { Ball } from "./Ball";
-import { useEffect } from "react";
-import * as THREE from "three";
-import { Ground } from "./Ground";
-import { Flag } from "./Flag";
+import {Box, Sky, Stars, useGLTF} from "@react-three/drei";
+import {CuboidCollider, Physics, RigidBody} from "@react-three/rapier";
+import {Ball} from "./Ball";
+import {useEffect} from "react";
+import {Ground} from "./Ground";
+import {Flag} from "./Flag";
 
 export const Game = () => {
   const { scene } = useGLTF("/models/Map1.glb");
@@ -31,7 +30,7 @@ export const Game = () => {
           color="white"
           distance={10}
           decay={2}
-          castShadow
+          castShadow={true}
           shadow-mapSize={[shadowMapSize, shadowMapSize]}
           shadow-bias={shadowBias}
         />
@@ -62,7 +61,7 @@ export const Game = () => {
         speed={1}
       />
 
-      <Physics debug={false}>
+        <Physics debug={true}>
         <RigidBody
           type="fixed"
           sensor
@@ -70,7 +69,7 @@ export const Game = () => {
           name="hole"
           position={[0, 0, 0]}
         >
-          <CuboidCollider args={[0.1, 0.1, 0.1]} />
+            <CuboidCollider args={[0.1, 0.07, 0.1]}/>
         </RigidBody>
 
         <RigidBody
@@ -83,16 +82,16 @@ export const Game = () => {
           <CuboidCollider args={[10, 1, 10]} />
         </RigidBody>
 
+            <Ball/>
+
         <RigidBody
           type="fixed"
-          colliders={"trimesh"}
-          friction={0.5}
+          colliders="trimesh"
           name="map"
         >
-          <primitive object={scene} castShadow receiveShadow />
+            <primitive object={scene} castShadow={true} receiveShadow={true}/>
         </RigidBody>
 
-        <Ball />
 
         <Flag />
       </Physics>
