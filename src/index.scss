@@ -5,20 +5,40 @@ $blue: #3498db;
 $grey: #f2f2f2;
 $gauge-level: 50%;
 
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
 #root {
   width: 100vw;
   height: 100vh;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
 }
 
 body {
   margin: 0;
 }
 
+Button {
+  font-size: 1rem;
+  font-weight: 400;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
 /* Game section */
 
 /* Win */
 .win {
-  font-size: 3rem;
+  font-size: 10rem;
   color: white;
   position: absolute;
   width: 100%;
@@ -28,6 +48,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+  row-gap: 10%;
   background-color: rgba(0, 0, 0, 0.7);
 }
 
@@ -49,17 +71,17 @@ body {
 
   .force-bar {
     background: rgb(0, 255, 21);
-    background: linear-gradient(to top, $red 0%, $yellow 50%, $green 100%);
+    background: linear-gradient(to bottom, $red 0%, $yellow 50%, $green 100%);
     height: 100%;
     width: 100%;
     transition: height 0.3s ease-in-out;
     clip-path: polygon(
-      0 calc(100% - $gauge-level),
-      100% calc(100% - $gauge-level),
-      100% 100%,
-      0 100%
+                    0 calc(100% - $gauge-level),
+                    100% calc(100% - $gauge-level),
+                    100% 100%,
+                    0 100%
     );
-    animation: gauge-level 3s infinite linear;
+    //animation: gauge-level 3s infinite linear;
   }
 }
 
@@ -69,13 +91,33 @@ body {
   }
   50% {
     clip-path: polygon(
-      0 100%,
-      100% 100%,
-      100% 100%,
-      0 100%
+                    0 100%,
+                    100% 100%,
+                    100% 100%,
+                    0 100%
     );
   }
   100% {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
+}
+
+/* Score */
+
+.score {
+  font-size: 2rem;
+  color: white;
+  position: absolute;
+  top: 5%;
+  right: 5%;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  flex-direction: column;
+  list-style: none;
 }
