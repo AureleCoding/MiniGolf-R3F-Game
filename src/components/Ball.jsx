@@ -4,9 +4,9 @@ import {useEffect, useRef, useState} from "react";
 import {useFrame, useThree} from "@react-three/fiber";
 import * as THREE from "three";
 import {audios, playAudio} from "../utils/AudioManager.jsx";
-
-const IMPULSE_SCALAR = 0.001;
-const SPAWN_POSITION = new THREE.Vector3(0, 0.5, -3);
+import {usePlayerContext} from "../context/PlayerContext.jsx";
+import {oscillate} from "../utils/Math";
+import {gameSettings, stats, useGameContext} from "../context/GameContext.jsx";
 
 export const Ball = () => {
     const {scene} = useGLTF("/models/ball.glb");
@@ -14,56 +14,69 @@ export const Ball = () => {
     const controlsRef = useRef();
     const {camera} = useThree();
 
-    const [win, setWin] = useState(false);
-    const [isTargetMode, setIsTargetMode] = useState(false);
     const [isArrowVisible, setIsArrowVisible] = useState(false);
-    const [isRigidBodyMoving, setIsRigidBodyMoving] = useState(false);
+    const [canHitBall, setCanHitBall] = useState(true);
 
     const arrowRef = useRef();
     const groupArrowRef = useRef();
 
+    const {incrementHitCount, updateStrength, getStrength} = usePlayerContext();
+    const {setGameState, gameState, currentHole} = useGameContext();
+
     const punch = () => {
         const arrowDirection = new THREE.Vector3();
         groupArrowRef.current.getWorldDirection(arrowDirection);
-        const impulse = arrowDirection.multiplyScalar(IMPULSE_SCALAR);
-        rb.current.applyImpulse(impulse, true);
-        setIsTargetMode(false);
+        const impulse = arrowDirection.multiplyScalar(getStrength());
+        rb.current.applyImpulse({x: impulse.x, y: 0, z: impulse.z}, true);
         setIsArrowVisible(false);
         playAudio(audios.hit);
+        incrementHitCount();
+        console.log("Hit count: ", getStrength());
     };
+
+    const win = () => {
+        playAudio(audios.hole);
+        setGameState(stats.win);
+        setCanHitBall(false);
+    }
 
     const respawn = () => {
         rb.current.setLinvel({x: 0, y: 0, z: 0}, true);
         rb.current.setAngvel({x: 0, y: 0, z: 0}, true);
-        rb.current.setTranslation(SPAWN_POSITION, true);
-        camera.position.set(SPAWN_POSITION.x, SPAWN_POSITION.y + 3, SPAWN_POSITION.z - 5);
+        rb.current.setTranslation(gameSettings[currentHole].position, true);
     };
 
     useEffect(() => {
-        if (!isRigidBodyMoving) {
-            const handleMouseDown = () => {
-                setIsArrowVisible(true);
-            };
+        camera.position.set(rb.current.translation().x, rb.current.translation().y + 3, rb.current.translation().z - 5);
+        camera.lookAt(rb.current.translation());
 
-            const handleMouseUp = () => {
-                punch();
-                setIsArrowVisible(false);
-            };
+        controlsRef.current.target.set(rb.current.translation().x, rb.current.translation().y, rb.current.translation().z);
+        controlsRef.current.update();
 
-            window.addEventListener("mousedown", handleMouseDown);
-            window.addEventListener("mouseup", handleMouseUp);
-            return () => {
-                window.removeEventListener("mousedown", handleMouseDown);
-                window.removeEventListener("mouseup", handleMouseUp);
-            };
-        }
-    }, [isTargetMode]);
-
-    useEffect(() => {
-        camera.position.set(SPAWN_POSITION.x, SPAWN_POSITION.y + 5, SPAWN_POSITION.z - 10);
+        respawn();
     }, [camera]);
 
-    useFrame(() => {
+    useEffect(() => {
+        const handleMouseDown = () => {
+            setIsArrowVisible(true);
+        };
+
+        const handleMouseUp = () => {
+            punch();
+            setIsArrowVisible(false);
+        };
+
+        if (!canHitBall) {
+            window.addEventListener("mousedown", handleMouseDown);
+            window.addEventListener("mouseup", handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener("mousedown", handleMouseDown);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [canHitBall]);
+
+    useFrame((state, delta, frame) => {
         if (rb.current && controlsRef.current) {
             const ballPosition = rb.current.translation();
 
@@ -72,64 +85,52 @@ export const Ball = () => {
 
             const cameraDirection = new THREE.Vector3();
             camera.getWorldDirection(cameraDirection).normalize();
-            groupArrowRef.current.position.copy(ballPosition).add(new THREE.Vector3(0, 0.01, 0));
-            groupArrowRef.current.lookAt(
-                ballPosition.x + cameraDirection.x,
-                ballPosition.y,
-                ballPosition.z + cameraDirection.z
-            );
+            groupArrowRef.current.position.copy(ballPosition).add(new THREE.Vector3(0, 0, 0));
+            groupArrowRef.current.lookAt(ballPosition.x + cameraDirection.x, ballPosition.y, ballPosition.z + cameraDirection.z);
 
-            const ballVelocity = rb.current.linvel();
-
-            // Check if the ball is moving
-            const isBallMoving = ballVelocity.x !== 0 || ballVelocity.y !== 0 || ballVelocity.z !== 0;
-            setIsRigidBodyMoving(isBallMoving);
+            setCanHitBall(rb.current.linvel().x !== 0 || rb.current.linvel().z !== 0 || gameState === stats.win);
         }
 
-        if (win) {
-            setWin(false);
-            playAudio(audios.hole);
-        }
+        const elapsedTime = state.clock.getElapsedTime();
+        updateStrength(oscillate(0.0005, 0.002, elapsedTime, 5));
     });
 
-    return (
-        <>
-            <OrbitControls
-                ref={controlsRef}
-                minDistance={2}
-                maxDistance={5}
-                enablePan={false}
-                enableZoom={true}
-                maxPolarAngle={0.49 * Math.PI}
-            />
-            <RigidBody
-                name="ball"
-                position={SPAWN_POSITION}
-                colliders={"ball"}
-                ref={rb}
-                restitution={0.6}
-                friction={2.0}
-                linearDamping={0.5}
-                angularDamping={0.6}
-                type="dynamic"
-                onIntersectionEnter={(e) => {
-                    if (e.other.rigidBodyObject?.name === "hole") {
-                        setWin(true);
-                    }
-                    if (e.other.rigidBodyObject?.name === "void") {
-                        respawn();
-                        console.log("Ball fell into the void!");
-                    }
-                }}
-            >
-                <Clone object={scene} castShadow/>
-            </RigidBody>
 
-            <group ref={groupArrowRef} visible={isArrowVisible}>
-                <Box args={[0.05, 0.02, 0.3]} ref={arrowRef} position={[0, 0, 0.15]}/>
-            </group>
-        </>
-    );
+    return (<>
+        <OrbitControls
+            ref={controlsRef}
+            minDistance={2}
+            maxDistance={5}
+            enablePan={false}
+            enableZoom={true}
+            maxPolarAngle={0.49 * Math.PI}
+        />
+        <RigidBody
+            position={gameSettings[currentHole].position}
+            name="ball"
+            colliders={"ball"}
+            ref={rb}
+            restitution={0.5}
+            friction={0.5}
+            linearDamping={2.0}
+            angularDamping={0.9}
+            type="dynamic"
+            onIntersectionEnter={(e) => {
+                if (e.other.rigidBodyObject?.name === "hole") {
+                    win();
+                }
+                if (e.other.rigidBodyObject?.name === "void") {
+                    respawn();
+                }
+            }}
+        >
+            <Clone object={scene} castShadow/>
+        </RigidBody>
+
+        <group ref={groupArrowRef} visible={isArrowVisible}>
+            <Box args={[0.05, 0.02, 0.3]} ref={arrowRef} position={[0, 0, 0.15]}/>
+        </group>
+    </>);
 };
 
 useGLTF.preload("/models/ball.glb");
