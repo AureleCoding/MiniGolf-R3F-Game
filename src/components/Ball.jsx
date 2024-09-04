@@ -20,7 +20,7 @@ export const Ball = () => {
     const arrowRef = useRef();
     const groupArrowRef = useRef();
 
-    const {incrementHitCount, updateStrength, getStrength} = usePlayerContext();
+    const {incrementHitCount, updateStrength, getStrength, setScoreBoard, getHitCount} = usePlayerContext();
     const {setGameState, gameState, currentHole} = useGameContext();
 
     const punch = () => {
@@ -38,6 +38,7 @@ export const Ball = () => {
         playAudio(audios.hole);
         setGameState(stats.win);
         setCanHitBall(false);
+        setScoreBoard(currentHole, getHitCount());
     }
 
     const respawn = () => {
@@ -76,7 +77,7 @@ export const Ball = () => {
         };
     }, [canHitBall]);
 
-    useFrame((state, delta, frame) => {
+    useFrame((state) => {
         if (rb.current && controlsRef.current) {
             const ballPosition = rb.current.translation();
 
@@ -121,6 +122,7 @@ export const Ball = () => {
                 }
                 if (e.other.rigidBodyObject?.name === "void") {
                     respawn();
+                    incrementHitCount();
                 }
             }}
         >
