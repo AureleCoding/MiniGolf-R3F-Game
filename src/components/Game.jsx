@@ -1,9 +1,9 @@
-import {Box, Sky, Stars, useGLTF} from "@react-three/drei";
+import {Box, OrbitControls, Sky, Stars, useGLTF} from "@react-three/drei";
 import {CuboidCollider, Physics, RigidBody} from "@react-three/rapier";
 import {Ball} from "./Ball";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {Ground} from "./Ground";
-import {Course} from "./Course.jsx";
+import {Course} from "./Course";
 
 export const Game = () => {
     const {scene} = useGLTF("/models/Course1.glb");
@@ -20,8 +20,9 @@ export const Game = () => {
     const shadowBias = -0.001;
     const shadowMapSize = 2048;
 
-    return (
-        <>
+    const [isFlyingMode, setIsFlyingMode] = useState(false);
+
+    return (<>
             <ambientLight intensity={0.5}/>
 
             <group position={[0, 3, 1]}>
@@ -61,7 +62,7 @@ export const Game = () => {
                 speed={1}
             />
 
-            <Physics debug={true}>
+        <Physics debug={false}>
                 <RigidBody
                     type="fixed"
                     sensor
@@ -72,10 +73,11 @@ export const Game = () => {
                     <CuboidCollider args={[10, 1, 10]}/>
                 </RigidBody>
 
-                <Ball/>
+            {isFlyingMode ? <OrbitControls/> : <Ball/>}
+
                 <Course/>
-            </Physics>
+            {/*<Map/>*/}
             <Ground/>
-        </>
-    );
+            </Physics>
+    </>);
 };

@@ -14,6 +14,7 @@ function App() {
                     <color attach="background" args={["lightBlue"]}/>
                     <Suspense>
                         <Experience/>
+                        {/*<Grid args={[100, 100]} />*/}
                     </Suspense>
                 </Canvas>
                 <UI/>

@@ -9,9 +9,9 @@ export const stats = {
 };
 
 export const gameSettings = [{
-    position: new THREE.Vector3(0, 0.3, -3), par: 1, hole: 1,
+    position: new THREE.Vector3(0, 0.5, -3), par: 2, hole: 1,
 }, {
-    position: new THREE.Vector3(2, 0.3, -3), par: 2, hole: 2,
+    position: new THREE.Vector3(1, 0.5, -3), par: 4, hole: 2,
 }];
 
 export const GameProvider = ({children}) => {
